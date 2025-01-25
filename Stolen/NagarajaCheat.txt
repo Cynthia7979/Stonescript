@@ -1,0 +1,79 @@
+/*
+Nagaraja Cheat Code
+by Yu, the Second Person (A_Lol)
+modified by Cynthia
+Does not really work
+- DO NOT PAUSE WHEN SPIT IS ON SCREEN
+
+To use:
+var NagarajaCheat = import NagarajaCheat
+[ Your Code Here ]
+?foe = "nagaraja"
+NagarajaCheat.Main()
+*/
+
+func FightSnake(use_ranged, use_tri)
+  var hp_threshold = maxhp * 0.5
+  ?debuffs.count > 20
+    activate potion
+  ?use_ranged
+    ?debuffs.count > 10 | hp < hp_threshold
+      equip vigor crossbow
+    :
+      equip ice crossbow
+  :
+    ?debuffs.count > 10
+      ?use_tri
+        equipL triskelion
+      :
+        equipL moon
+      ?foe.debuffs.count < 2
+        equipR ice sword
+      :
+        equipR hammer
+    :
+      ?hp < hp_threshold
+        equipL vigor sword
+      :
+        equipL ice sword
+      ?use_tri
+        equipR triskelion
+      :
+        equipR poison long sword
+
+func Main()
+  var incomingSpit = -1 // stores ETA of spit
+  var incomingSpit2 = -1 // in case chill fails
+  // Nagaraja just spat
+  ?foe.state = 31 | (foe.state = 33 & foe.time = 0)
+    // there is already another spit in the air
+    ?incomingSpit > totaltime
+    ^& incomingSpit2 = totaltime + 25
+    :
+      incomingSpit = totaltime + 25
+  // avoid brick and give space for walking
+  ?foe.distance <= 10
+  ^& item.GetCooldown(“mind”) <= 0
+    equipL mind
+    equipR ouroboros
+  // there is a spit in the air
+  :?incomingSpit > totaltime
+    // impact imminent, walk forward 2 steps
+    ?incomingSpit - totaltime <= 5
+      ?incomingSpit = totaltime + 5
+        FightSnake(false, false)
+      :
+        FightSnake(false, true)
+    // waiting for spit to get closer
+    :
+      FightSnake(false, false)
+  :?foe.state = 105
+    equipL quest
+    equipR crossbow *0 +0
+  :
+    FightSnake(false, false)
+  // a spit just landed,
+  // handle next spit (if any)
+  ?incomingSpit = totaltime
+  ^& incomingSpit2 > incomingSpit
+    incomingSpit = incomingSpit2

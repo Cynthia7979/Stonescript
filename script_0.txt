@@ -1,0 +1,67 @@
+/* ISTG if I spend more time on this
+   silly game than my CS assignments...
+                           --- Cynthia */
+// Default loadout = 3
+import UI/MindstoneButton
+//import Cosmetics/PetBoo
+
+var do_harvest = false
+// For time optimization
+var easy = false
+
+func runeMelee()
+  equipL poison sword
+  ?hp = maxhp
+    equipR poison
+  :
+    equipR vigor sword
+
+func runeRanged()
+  equipL poison wand
+  equipR vigor wand
+
+?hp <= foe.damage
+  activate potion
+  brew Tar
+
+?foe = boss
+  ?foe = ＂poena＂
+    equip quarterstaff
+  :
+    equipL ham
+    ?foe.distance < 6  // Hammer range
+      equipR moon
+    :?foe.distance < 12 // Trisk range
+      ?hp ! maxhp
+        equipR vigor sword
+      :
+        equipR ice sword
+    :
+      equipR trisk
+:?foe.distance < 12 & foe ! immune_to_physical
+  runeMelee()
+  ?easy
+    equipR moon
+:?foe.distance < 25  // Long crossbow
+  ?foe = immune_to_physical
+    runeRanged()
+  :?foe.distance > 10
+  ^& (foe = immune_to_ranged | foe.count = 1)
+    equip trisk
+  :
+    equip vigor crossbow
+:
+  ?do_harvest
+    ?harvest.distance < 15
+      ?harvest=Boulder
+        equip shovel
+      :?harvest=Tree
+        equip hatchet
+  ?pickup.distance < 15
+    equipL star
+  :
+    equipL moondial
+    ?easy | hp = maxhp
+      equipR trisk
+    :
+      equipR our
