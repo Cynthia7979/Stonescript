@@ -1,0 +1,10 @@
+/*
+Debug functions by Cynthia7979
+Dependencies:
+    └ Utils/Colors
+*/
+var Colors = import Utils/Colors
+
+func PrintVars(arrVarName, arrVar)
+  for i = 0 .. arrVarName.Count() - 1
+    >`0,@5+i@,#@Colors.GRAY@,@arrVarName[i]@=@arrVar[i]@

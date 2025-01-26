@@ -1,0 +1,225 @@
+/*
+Nagaraja idle script by Cynthia7979
+Requires Cleasing Potion
+Dependencies:
+  └ Utils/StdUtils
+  └ Utils/Debug
+    └ Utils/Colors
+*/
+var Debug = import Utils/Debug
+var Stdlib = import Utils/StdUtils
+var Colors = import Utils/Colors
+
+var spitCounter = -1
+var brickCounter = -1
+var timedGearLCounter = -1
+var timedGearLName = ""
+var timedGearRCounter = -1
+var timedGearRName = ""
+var prevState = -1
+
+// Works for *4, *5; Developing for *6+
+func ParseNagState()
+  ?foe ! nagaraja
+    >`0,1,#red,@foe@ is not the snake...
+    return -1
+  ?Type(spitCounter) ! int
+    >`0,1,#red,spitCounter~@Type(spitCounter)@
+    return -1
+  ?Type(brickCounter) ! int
+    >`0,1,#red,brickCounter~@Type(brickCounter)@
+    return -1
+  
+  Debug.PrintVars(
+    ^["state","prevState","spitCntr","brickCntr","tR","tRCntr","tL","tLCntr"],
+    ^[foe.state,prevState,spitCounter,brickCounter,timedGearRName,timedGearRCounter,timedGearLName,timedGearLCounter]
+  ^)
+
+  ?foe.state = 32 | foe.state = 33
+    ?spitCounter = -1
+      spitCounter = 65
+    :?spitCounter = 20
+      ?item.GetCooldown("mind") > 20 & item.GetCooldown("quarterstaff") >= 20
+        // Cannot dodge; Preemptively prepare shield
+        >( "/)
+        timedGearRName = "*9 shield"
+        timedGearRCounter = 35
+        ?foe.distance > 5
+          timedGearLName = "*9 crossbow"
+        :
+          timedGearLName = "hammer"
+        timedGearLCounter = 35
+        spitCounter = -1
+      :
+        spitCounter--
+    :?spitCounter = 0
+      ?item.GetCooldown("mind") <= 0
+        equip mind
+      :
+        equip quarterstaff
+        activate R
+      spitCounter = -1
+    :
+      spitCounter--
+  :?spitCounter ! -1
+    // Spit completed, reset counter
+    spitCounter = -1
+  
+  ?foe.state = 112 & foe.distance < 16
+    ?brickCounter = -1
+      brickCounter = 50
+    :?brickCounter = 0
+      ?item.GetCooldown("mind") <= 0
+        equip mind
+    :
+      brickCounter--
+  :?brickCounter ! -1
+    brickCounter = -1
+
+  ?debuffs.count > 10
+   ^&(
+   ^  foe.state = 103 | foe.state = 104
+   ^| foe.state = 105 | foe.state = 106
+   ^| foe.state = 107
+   ^ )
+    // About to get eaten
+    ?item.GetCooldown("quarterstaff") <= 0
+      equip quarter
+      activate R
+    :?debuffs.count > 20
+      // Fuck (crossbow won't deal damage)
+      equipL trisk
+      equipR ham
+    :
+      equipL *9 crossbow
+      equipR *8 crossbow
+
+  ?foe.state = 1
+    // Cinematic
+    ? hp < maxhp
+      equipL ouro
+      equipR wand
+
+  prevState = foe.state
+
+// Overrides any previous equipping logic
+func TimedGearOverride()
+  ?Type(timedGearLCounter) ! int
+    >`0,1,#red,timedGearLCounter~
+      ^@Type(timedGearLCounter)@
+    return -1
+  ?Type(timedGearRCounter) ! int
+    >`0,1,#red,timedGearRCounter~
+      ^@Type(timedGearRCounter)@
+    return -1
+
+  ?timedGearLCounter < -1
+    crossbowLCounter = -1
+  :?timedGearLCounter ! -1
+    equipL @timedGearLName@
+    timedGearLCounter--
+  
+  ?timedGearRCounter < -1
+    shieldCounter = -1
+  :?timedGearRCounter ! -1
+    equipR @timedGearRName@
+    timedGearRCounter--
+
+Stdlib.AAC()
+
+?hp < foe.damage
+  activate potion
+
+?foe ! boss
+  Debug.PrintVars(["foe","state"],[foe.name,foe.state])
+
+  ?foe.distance > 25
+    // Walk into attack range
+    ?hp < maxhp
+      Stdlib.SmartEquip("left","our")
+    :
+      Stdlib.SmartEquip("left","exp")
+    Stdlib.SmartEquip("right","trisk")
+  :
+    ?(foe ! worm_rider & foe.distance > 10)
+    ^| foe = worm_rider & foe.distance > 8
+      // (Long) Crossbow range
+      ?foe.count = 1
+        ?foe.hp < 20
+          // Quickshot
+          Stdlib.SmartEquip("left","moon")
+        :
+          Stdlib.SmartEquip("left","*8 crossbow")
+        Stdlib.SmartEquip("right","*9 crossbow")
+      :
+        ?hp < maxhp
+        ^& item.right.state > 2
+          Stdlib.SmartEquip("both","vigor crossbow")
+        :
+          Stdlib.SmartEquip("both","ice crossbow")
+    :
+      // Melee range
+      ?item.GetCooldown("mind") <= 0
+      ^& item.left.state ! 2
+      ^& item.right.state ! 2
+      ^& foe ! ranged
+      ^& foe ! slow
+        // Dodge
+        equip mind
+      :
+        ?foe.hp < 25
+          Stdlib.SmartEquip("left","exp")
+        :
+          Stdlib.SmartEquip("left","moon")
+        Stdlib.SmartEquip("right","hammer")
+:
+  // Nagaraja
+
+  ?debuffs.count > 20
+    activate potion
+
+  ?foe.distance > 23
+    ?foe.state ! 32 & foe.state ! 33
+      Stdlib.SmartEquip("left","trisk")
+      Stdlib.SmartEquip("right","*9 shield")
+  :?foe.distance >= 12
+    // Ranged
+    ?foe.hp < 150
+      // Go in
+      ?foe.distance > 11
+        Stdlib.SmartEquip("left","*9 crossbow")
+        Stdlib.SmartEquip("right","trisk")
+      :
+        Stdlib.SmartEquip("both","quarterstaff")
+    :?hp < maxhp * 0.75
+    ^& foe.debuffs.count > 1
+    ^& item.right.state > 2
+      Stdlib.SmartEquip("both","vigor crossbow")
+    :
+      Stdlib.SmartEquip("both","ice crossbow")
+  :
+    // Melee
+    // -Right hand
+    ?foe.distance > 6
+      ?foe.distance > 11
+        Stdlib.SmartEquip("right","trisk")
+      :
+        Stdlib.SmartEquip("right","*9 shield")
+    :
+      ?foe.hp < 150
+        ?item.potion ! empty & debuffs.count > 0 & hp < maxhp
+          activate potion
+        Stdlib.SmartEquip("right","exp")
+      :
+        Stdlib.SmartEquip("right","moon")
+
+    // -Left hand
+    ?foe.debuffs.count < 4 & debuffs.count < 10
+      Stdlib.SmartEquip("left","ice sword")
+    :
+      ?hp < maxhp * 0.75 & debuffs.count < 10
+        Stdlib.SmartEquip("left","vigor sword")
+      :
+        Stdlib.SmartEquip("left","hammer")
+  ParseNagState()
+  TimedGearOverride()

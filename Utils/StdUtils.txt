@@ -1,0 +1,19 @@
+func AAC()
+  ?item.left.state = 3
+    equipL *0 wand
+    equipL @item.left@
+  ?item.right.state = 3
+    equipR *0 shield
+    equipR @item.right@
+
+// Equip without breaking current attack animation
+func SmartEquip(hand, equipment)
+  ?hand = "left"
+    ?item.left.state ! 2
+      equipL @equipment@
+  ?hand = "right"
+    ?item.right.state ! 2
+      equipR @equipment@
+  :?hand = "both"
+    ?item.left.state ! 2 & item.right.state ! 2
+      equip @equipment@
