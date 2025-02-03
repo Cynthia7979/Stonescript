@@ -5,7 +5,7 @@ func AAC()
   ?item.left.state = 3
     equipL *0 wand
     equipL @item.left@
-  ?item.right.state = 3
+  ?item.right.state = 3 & item.right ! shield
     equipR *0 shield
     ?item.left
       equipR @item.right@
@@ -28,7 +28,8 @@ func SmartEquip(hand, equipment)
 var handL
 var handR
 func UseMask()
-  ?foe.distance < 22 & item.GetCooldown("mask") <= 0
+  ?foe.distance < 22 & item.GetCooldown("mask") <= 0 &
+  ^ item.left.state ! 2 & item.right.state ! 2
     handL = item.left
     handR = item.right
     equip mask

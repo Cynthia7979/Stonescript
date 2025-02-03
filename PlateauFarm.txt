@@ -4,5 +4,141 @@ Dependencies:
   └ Utils/StdLib
   └ Utils/Debug
     └ Utils/Colors
+
+States:
+    126 Dialog 1        127 Dialog 2
+    117 Transformed     118 Transformed & Tangible
+    ------------   Phase 1   --------------
+    32  Idle            2 Perf
+    33  Attack (fissure on 6th)
+    ------------   Phase 2   --------------
+    32 Idle             2 Perf
+    33 Attack depending on element
 */
 
+// Libraries
+var stdlib = import Utils/StdLib
+
+// Config variables
+var doHarvest = false
+
+// Global vars
+var armorPercent
+var prevPhase = 1
+var prevState
+var attacksCount = 0
+
+// Functions
+
+// Always run every frame
+stdlib.AAC()
+?maxarmor ! 0
+    armorPercent = armor / maxarmor
+:
+    armorPercent = -1
+disable npcDialog
+
+// Main logic
+?foe.count = 0 | foe.distance > 23 | 
+^foe = phase1 & (
+    ^foe.state = 126 | foe.state = 127 | foe.state = 128 | 
+    ^foe.state = 100 | foe.state = 101 | foe.state = 102 | 
+    ^foe.state = 117 | foe.state = 124
+^) | (foe.state = 107 & foe ! phase3) | foe.hp = 0 |
+^ (foe = phase3 & foe.state = 116)
+    // Not in combat
+    ?hp < maxhp
+        equipL ouroboros
+    :
+        equipL triskelion
+    equipR star
+    ?harvest.distance < 10 & doHarvest
+        equip shovel
+:
+    stdlib.UseMask()
+    ?foe = phase1
+        stdlib.SmartEquip("left","*9 crossbow")
+        stdlib.SmartEquip("right","*8 crossbow")
+        ?foe.state = 2
+            ?foe.time > 60 
+                stdlib.SmartEquip("right","*9 shield")
+            ?prevState = 33
+                attacksCount++
+        :?foe.state = 32
+            stdlib.SmartEquip("right","*9 shield")
+        :?foe.state = 33
+            ?foe.time < 10
+                stdlib.SmartEquip("right","*9 shield")
+            ?attacksCount = 5
+                ?foe.time > 10 & item.GetCooldown("mind") <= 0
+                    // Dodge beam
+                    equipR mind
+                    attacksCount = -1  // Will be incremented after attack completes
+        ?attacksCount > 5
+            // May happen if mindstone fails to activate
+            attacksCount = 0
+    :?foe = phase2
+        ?prevPhase = 1
+            attacksCount = 0
+        
+        ?foe = ice
+            stdlib.SmartEquip("both","fire crossbow")
+        :?foe = fire
+            stdlib.SmartEquip("left","*9 crossbow")
+            stdlib.SmartEquip("right","*8 crossbow")
+        :?foe = poison
+            stdlib.SmartEquip("both","ice crossbow")
+        :?foe = vigor
+            stdlib.SmartEquip("left","poison wand")
+            stdlib.SmartEquip("right","big poison sword")
+        :?foe = aether
+            stdlib.SmartEquip("both","vigor crossbow")
+        
+        ?((foe.state = 32 & foe.time > 120) | foe.state = 33) &
+        ^(foe = ice | foe = fire)
+            // Dodge the more nasty damage
+            ?item.GetCooldown("mind") <= 0
+                equipR mind
+            :?item.GetCooldown("quarterstaff") <= 0 & foe.distance > 10
+                equip quarterstaff
+                activate R
+            :
+                stdlib.SmartEquip("right","*9 shield")
+    :?foe = phase3
+        // Pretty much same thing as phase 1? At least for 5*
+        ?foe.armor > 0
+            stdlib.SmartEquip("left","hammer")
+            ?foe.distance > 12
+                stdlib.SmartEquip("right","trisk")
+            :?foe.distance >= 6
+                stdlib.SmartEquip("right","*9 shield")
+            :
+                stdlib.SmartEquip("right","moon")
+        :
+            ?foe.distance > 6
+                ?hp < maxhp - 10
+                    stdlib.SmartEquip("both","vigor crossbow")
+                :
+                    stdlib.SmartEquip("left","*9 crossbow")
+                    stdlib.SmartEquip("right","*8 crossbow")
+            :
+                ?hp < maxhp - 3
+                    stdlib.SmartEquip("left","vigor sword")
+                    stdlib.SmartEquip("right","vigor wand")
+                :
+                    stdlib.SmartEquip("left","hammer")
+                    ?foe.distance >= 6
+                        stdlib.SmartEquip("right","*9 shield")
+                    :
+                        stdlib.SmartEquip("right","moon")
+        ?foe.state = 32
+            stdlib.SmartEquip("right","*9 shield")
+        ?foe.state = 115 & foe.time >= 75
+            equipR mind
+    ?foe = phase1
+        prevPhase = 1
+    :?foe = phase2
+        prevPhase = 2
+    :?foe = phase3
+        prevPhase = 3
+    prevState = foe.state
