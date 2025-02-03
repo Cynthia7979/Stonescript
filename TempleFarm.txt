@@ -2,12 +2,12 @@
 Nagaraja idle script by Cynthia7979
 Requires Cleasing Potion
 Dependencies:
-  └ Utils/StdUtils
+  └ Utils/StdLib
   └ Utils/Debug
     └ Utils/Colors
 */
 var Debug = import Utils/Debug
-var Stdlib = import Utils/StdUtils
+var Stdlib = import Utils/StdLib
 var Colors = import Utils/Colors
 
 var spitCounter = -1
