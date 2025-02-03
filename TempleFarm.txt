@@ -78,9 +78,9 @@ func ParseNagState()
 
   ?debuffs.count > 10
    ^&(
-   ^  foe.state = 103 | foe.state = 104
-   ^| foe.state = 105 | foe.state = 106
-   ^| foe.state = 107
+   ^  foe.state = 103 | foe.state = 104 |
+   ^  foe.state = 105 | foe.state = 106 |
+   ^  foe.state = 107
    ^ )
     // About to get eaten
     ?item.GetCooldown("quarterstaff") <= 0
@@ -141,8 +141,8 @@ Stdlib.AAC()
       Stdlib.SmartEquip("left","exp")
     Stdlib.SmartEquip("right","trisk")
   :
-    ?(foe ! worm_rider & foe.distance > 10)
-    ^| foe = worm_rider & foe.distance > 8
+    ?(foe ! worm_rider & foe.distance > 10) |
+    ^ foe = worm_rider & foe.distance > 8
       // (Long) Crossbow range
       ?foe.count = 1
         ?foe.hp < 20

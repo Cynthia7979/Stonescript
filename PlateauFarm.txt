@@ -1,0 +1,8 @@
+/*
+Rocky Plateau idle script by Cynthia7979
+Dependencies:
+  └ Utils/StdLib
+  └ Utils/Debug
+    └ Utils/Colors
+*/
+

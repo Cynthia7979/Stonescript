@@ -24,3 +24,18 @@ func SmartEquip(hand, equipment)
     ?item.left.state ! 2 & item.right.state ! 2
       equip @equipment@
 
+// Auto-activate mask if possible and recover original loadout
+var handL
+var handR
+func UseMask()
+  ?foe.distance < 22 & item.GetCooldown("mask") <= 0
+    handL = item.left
+    handR = item.right
+    equip mask
+    activate R
+  :?item.right = mask & handR ! mask
+    ?item.left
+      equipL @handL@
+      equipR @handR@
+    :
+      equip @handR@
