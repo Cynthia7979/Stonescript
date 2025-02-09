@@ -1,0 +1,41 @@
+var Stdlib = import Utils/StdLib
+var Eq = import Utils/Equipments
+
+brew tar
+Stdlib.AAC()
+?hp <= foe.damage + foe.buffs.count
+    activate potion
+
+?foe = boss & foe.state ! 1
+    ?Stdlib.UseMask() == 0
+        Stdlib.UseBlade()
+    Stdlib.SmartEquip("left",Eq.MaxCross1)
+    Stdlib.SmartEquip("right",Eq.MaxCross2)
+    ?foe.state = 133 & foe.time <= 13 &
+    ^foe.time > 5
+        ?item.GetCooldown("mind") <= 0
+            equipR mind
+            activate R
+:
+    ?foe.distance > 22
+        ?hp < maxhp
+        equipL our
+        ?foe.distance < 32
+            equipR trisk
+        :
+            equipR quest
+        :
+        equipL star
+        equipR trisk
+    :
+        ?item.GetCooldown("blade") <= 0
+        Stdlib.SmartEquip("both","god")
+        ?item.right = god
+            activate R
+        ?hp < maxhp * 0.75
+        Stdlib.SmartEquip("both", "vigor crossbow")
+        :
+        Stdlib.SmartEquip("both", "ice crossbow")
+    ?foe.distance < 8 & item.GetCooldown("mind") <= 0
+        equipL mind
+        activate R

@@ -1,0 +1,2 @@
+var MaxCross1 = "crossbow_lv1024_Epic7:1-1q109"
+var MaxCross2 = "crossbow_lv1024_Epic9:0-1q214"

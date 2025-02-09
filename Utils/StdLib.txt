@@ -24,19 +24,84 @@ func SmartEquip(hand, equipment)
     ?item.left.state ! 2 & item.right.state ! 2
       equip @equipment@
 
-// Auto-activate mask if possible and recover original loadout
 var handL
 var handR
-func UseMask()
+func TriggerMask()
   ?foe.distance < 22 & item.GetCooldown("mask") <= 0 &
   ^ item.left.state ! 2 & item.right.state ! 2
-    handL = item.left
-    handR = item.right
+    ?item.right ! handR & (item.right ! blade & item.right ! arm & item.right ! mask) &
+    ^item.left ! handL
+      handL = item.left
+      handR = item.right
     equip mask
     activate R
+    return 1
   :?item.right = mask & handR ! mask
     ?item.left
       equipL @handL@
       equipR @handR@
     :
       equip @handR@
+  return 0
+
+func TriggerBlade()
+  ?foe.distance < 22 & item.GetCooldown("blade") <= 0 &
+  ^ item.left.state ! 2 & item.right.state ! 2
+    ?item.right ! handR & (item.right ! blade & item.right ! arm & item.right ! mask) &
+    ^item.left ! handL
+      handL = item.left
+      handR = item.right
+    equip blade
+    activate R
+    return 1
+  :?item.right = blade & handR ! blade
+    ?item.left
+      equipL @handL@
+      equipR @handR@
+    :
+      equip @handR@
+  return 0
+
+func TriggerPickpocket()
+  ?foe.distance <= 6 & item.GetCooldown("skeleton_arm") <= 0
+    ?item.left.state ! 2 & item.right.state ! 2
+      ?item.right ! handR & (item.right ! blade & item.right ! arm & item.right ! mask) &
+      ^item.left ! handL
+        handL = item.left
+        handR = item.right
+      equip arm
+      activate R
+      return 1
+  :?item.right = arm & handR ! arm
+    ?item.left
+      equipL @handL@
+      equipR @handR@
+    :
+      equip @handR@
+  return 0
+
+// Auto-activate activateable items - DOES NOT RECOVER ORIGINAL LOADOUT
+// for temporary script use Trigger[Item]()
+func UseMask()
+  ?foe.distance < 22 & item.GetCooldown("mask") <= 0 &
+  ^ item.left.state ! 2 & item.right.state ! 2
+    equip mask
+    activate R
+    return 1
+  return 0
+
+func UseBlade()
+  ?foe.distance < 22 & item.GetCooldown("blade") <= 0 &
+  ^ item.left.state ! 2 & item.right.state ! 2
+    equip blade
+    activate R
+    return 1
+  return 0
+
+func Pickpocket()
+  ?foe.distance <= 6 & item.GetCooldown("skeleton_arm") <= 0 &
+  ^ item.left.state ! 2 & item.right.state ! 2
+      equip arm
+      activate R
+      return 1
+  return 0
