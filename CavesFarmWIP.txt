@@ -25,8 +25,8 @@ Stdlib.AAC()
         :
             equipR quest
         :
-        equipL star
-        equipR trisk
+            equipL star
+            equipR trisk
     :
         ?item.GetCooldown("blade") <= 0
         Stdlib.SmartEquip("both","god")

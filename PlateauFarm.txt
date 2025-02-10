@@ -17,7 +17,8 @@ States:
 */
 
 // Libraries
-var stdlib = import Utils/StdLib
+var Stdlib = import Utils/StdLib
+var Eq = import Utils/Equipments
 
 // Config variables
 var doHarvest = false
@@ -31,7 +32,7 @@ var attacksCount = 0
 // Functions
 
 // Always run every frame
-stdlib.AAC()
+Stdlib.AAC()
 ?maxarmor ! 0
     armorPercent = armor / maxarmor
 :
@@ -55,20 +56,26 @@ disable npcDialog
     ?harvest.distance < 10 & doHarvest
         equip shovel
 :
-    stdlib.UseMask()
+    ?armor >= 14 & item.GetCooldown("wand_aether") <= 0
+        Stdlib.SmartEquip("left","calamity")
+        activate L
+    :?Stdlib.UseMask() = 0
+        Stdlib.UseBlade()
+    
+    /* -=-=-=-=-=-=-=-=-=-=-  PHASE 1  -=-=-=-=-=-=-=-=-=-=-*/
     ?foe = phase1
-        stdlib.SmartEquip("left","*9 crossbow")
-        stdlib.SmartEquip("right","*8 crossbow")
+        Stdlib.SmartEquip("left",Eq.MaxCross1)
+        Stdlib.SmartEquip("right",Eq.MaxCross2)
         ?foe.state = 2
             ?foe.time > 60 
-                stdlib.SmartEquip("right","*9 shield")
+                Stdlib.SmartEquip("right",Eq.Shield)
             ?prevState = 33
                 attacksCount++
         :?foe.state = 32
-            stdlib.SmartEquip("right","*9 shield")
+            Stdlib.SmartEquip("right",Eq.Shield)
         :?foe.state = 33
             ?foe.time < 10
-                stdlib.SmartEquip("right","*9 shield")
+                Stdlib.SmartEquip("right",Eq.Shield)
             ?attacksCount = 5
                 ?foe.time > 10 & item.GetCooldown("mind") <= 0
                     // Dodge beam
@@ -77,22 +84,23 @@ disable npcDialog
         ?attacksCount > 5
             // May happen if mindstone fails to activate
             attacksCount = 0
+    /* -=-=-=-=-=-=-=-=-=-=-  PHASE 2  -=-=-=-=-=-=-=-=-=-=-*/
     :?foe = phase2
         ?prevPhase = 1
             attacksCount = 0
         
         ?foe = ice
-            stdlib.SmartEquip("both","fire crossbow")
+            Stdlib.SmartEquip("both","fire crossbow")
         :?foe = fire
-            stdlib.SmartEquip("left","*9 crossbow")
-            stdlib.SmartEquip("right","*8 crossbow")
+            Stdlib.SmartEquip("both","aether staff")
         :?foe = poison
-            stdlib.SmartEquip("both","ice crossbow")
+            Stdlib.SmartEquip("both","ice crossbow")
         :?foe = vigor
-            stdlib.SmartEquip("left","poison wand")
-            stdlib.SmartEquip("right","big poison sword")
+            Stdlib.SmartEquip("left","poison wand")
+            Stdlib.SmartEquip("right",Eq.Shield)
         :?foe = aether
-            stdlib.SmartEquip("both","vigor crossbow")
+            Stdlib.SmartEquip("left","vigor wand")
+            Stdlib.SmartEquip("right",Eq.Shield)
         
         ?((foe.state = 32 & foe.time > 120) | foe.state = 33) &
         ^(foe = ice | foe = fire)
@@ -103,38 +111,44 @@ disable npcDialog
                 equip quarterstaff
                 activate R
             :
-                stdlib.SmartEquip("right","*9 shield")
+                ?!(item.left)
+                    Stdlib.SmartEquip("left",Eq.MaxCross1)
+                Stdlib.SmartEquip("right",Eq.Shield)
+    /* -=-=-=-=-=-=-=-=-=-=-  PHASE 3  -=-=-=-=-=-=-=-=-=-=-*/
     :?foe = phase3
         // Pretty much same thing as phase 1? At least for 5*
+        // Also weakness is everything
         ?foe.armor > 0
-            stdlib.SmartEquip("left","hammer")
-            ?foe.distance > 12
-                stdlib.SmartEquip("right","trisk")
-            :?foe.distance >= 6
-                stdlib.SmartEquip("right","*9 shield")
+            ?foe.distance < 6 & item.GetCooldown("hammer") <= 0
+                equip heavy
+                activate R
             :
-                stdlib.SmartEquip("right","moon")
+                Stdlib.SmartEquip("left","hammer")
+                ?foe.distance > 12
+                    Stdlib.SmartEquip("right","trisk")
+                :?foe.distance >= 6
+                    Stdlib.SmartEquip("right",Eq.Shield)
+                :
+                    Stdlib.SmartEquip("right","moon")
         :
             ?foe.distance > 6
                 ?hp < maxhp - 10
-                    stdlib.SmartEquip("both","vigor crossbow")
+                    Stdlib.SmartEquip("left","vigor wand")
                 :
-                    stdlib.SmartEquip("left","*9 crossbow")
-                    stdlib.SmartEquip("right","*8 crossbow")
+                    Stdlib.SmartEquip("left",Eq.MaxCross1)
+                Stdlib.SmartEquip("right",Eq.Shield)
             :
                 ?hp < maxhp - 3
-                    stdlib.SmartEquip("left","vigor sword")
-                    stdlib.SmartEquip("right","vigor wand")
+                    Stdlib.SmartEquip("left","vigor sword")
+                    Stdlib.SmartEquip("right","moon")
                 :
-                    stdlib.SmartEquip("left","hammer")
-                    ?foe.distance >= 6
-                        stdlib.SmartEquip("right","*9 shield")
-                    :
-                        stdlib.SmartEquip("right","moon")
-        ?foe.state = 32
-            stdlib.SmartEquip("right","*9 shield")
-        ?foe.state = 115 & foe.time >= 75
-            equipR mind
+                    Stdlib.SmartEquip("both","heavy")
+        ?foe.state = 115 & foe.time >= 65  // big attack
+            ?item.GetCooldown("mind") <= 0
+                equipR mind
+            :?item.GetCooldown("quarterstaff") <= 0
+                equip quarterstaff
+                activate R
     ?foe = phase1
         prevPhase = 1
     :?foe = phase2

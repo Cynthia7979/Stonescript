@@ -1,2 +1,3 @@
-var MaxCross1 = "crossbow_lv1024_Epic7:1-1q109"
-var MaxCross2 = "crossbow_lv1024_Epic9:0-1q214"
+var MaxCross1 = "max crossbow +9"
+var MaxCross2 = "max crossbow +7"
+var Shield = "max aether shield +10"
